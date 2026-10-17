@@ -7,7 +7,7 @@
 #include "motor.h"  
 
 void Run_task(void *ptr);
-void Motor_task(void *ptr);  
+
 
 void app_main(void)
 {
@@ -15,17 +15,10 @@ void app_main(void)
     Key_Init();
     Motor_Init();  
 
-    Motor_Control(10);
-    Motor_Control(30);
-    Motor_Control(50);
-    Motor_Control(70);
-    Motor_Control(100);
 
-    gpio_set_level(GPIO_NUM_10, 0);
-    xTaskCreatePinnedToCore(Run_task,"run",2048, NULL, 5, NULL, 0);
-
-    
-    xTaskCreatePinnedToCore(Motor_task,"motor",2048, NULL, 5, NULL, 0);
+     xTaskCreatePinnedToCore(
+        Run_task, "run", 2048, NULL, 5, NULL, 0
+    );
 }
 
 
@@ -42,27 +35,26 @@ void app_main(void)
 // }
 
 
-// void Run_task(void *ptr)
-// {
-//     // while (1)
-//     // {
-//     //     gpio_set_level(GPIO_NUM_10, 0);  // 亮灯
-//     //     vTaskDelay(pdMS_TO_TICKS(1000)); // 等待1秒
+void Run_task(void *ptr)
+{
+    while (1)
+    {
+        Motor_Control(10);
+        vTaskDelay(pdMS_TO_TICKS(1000));
 
-//     //     gpio_set_level(GPIO_NUM_10, 1);  // 灭灯
-//     //     vTaskDelay(pdMS_TO_TICKS(1000)); // 等待1秒
-//     // }
+        Motor_Control(30);
+        vTaskDelay(pdMS_TO_TICKS(1000));
 
-//     while(1)
-//     {
-//         if(Key_GetStatus())
-//         {
-//             printf("按下按键\r\n");
+        Motor_Control(50);
+        vTaskDelay(pdMS_TO_TICKS(1000));
 
-//         }
-//         vTaskDelay(10 / portTICK_PERIOD_MS);
-//     }
-// }
+        Motor_Control(70);
+        vTaskDelay(pdMS_TO_TICKS(1000));
+
+        Motor_Control(100);
+        vTaskDelay(pdMS_TO_TICKS(1000));
+    }
+}
 
 // void Run_task(void *ptr)
 // {
