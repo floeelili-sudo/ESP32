@@ -1,37 +1,78 @@
 #include "motor.h"
 
+
 void Motor_Init(void)
 {
-    gpio_config_t pGPIOConfig = {0};
+   
+    ledc_timer_config_t timer_conf = {0};
+    timer_conf.duty_resolution = LEDC_TIMER_13_BIT;
+    timer_conf.freq_hz = 1000;
+    timer_conf.speed_mode = LEDC_LOW_SPEED_MODE;
+    timer_conf.timer_num = LEDC_TIMER_1;
+    ledc_timer_config(&timer_conf);
 
-    pGPIOConfig.mode = GPIO_MODE_OUTPUT;
-    pGPIOConfig.pin_bit_mask = (1ULL << MOTOR_IA) |
-                              (1ULL << MOTOR_IB);
-    pGPIOConfig.pull_down_en = GPIO_PULLDOWN_DISABLE;
-    pGPIOConfig.pull_up_en = GPIO_PULLUP_DISABLE;
+    ledc_channel_config_t ledc_confIA={0};
+    ledc_confIA.channel = LEDC_CHANNEL_2;
+    ledc_confIA.duty = 0;
+    ledc_confIA.gpio_num = 46;
+    ledc_confIA.hpoint =0 ;
+    ledc_confIA.speed_mode = LEDC_LOW_SPEED_MODE;
+    ledc_confIA.timer_sel = LEDC_TIMER_1;
+    ledc_channel_config(&ledc_confIA);
 
-    gpio_config(&pGPIOConfig);
-
-    Motor_Stop();
+    ledc_channel_config_t ledc_confIB={0};
+    ledc_confIB.channel = LEDC_CHANNEL_3;
+    ledc_confIB.duty = 0;
+    ledc_confIB.gpio_num = 9;
+    ledc_confIB.hpoint =0 ;
+    ledc_confIB.speed_mode = LEDC_LOW_SPEED_MODE;
+    ledc_confIB.timer_sel = LEDC_TIMER_1;
+    ledc_channel_config(&ledc_confIB);
 }
 
-// 正转：IA高，IB低
-void Motor_Run(void)
+void Motor_IA_PWM(uint16_t speed)
 {
-    gpio_set_level(MOTOR_IB, 0);
-    gpio_set_level(MOTOR_IA, 1);
+    float pwm_value = 0;
+    pwm_value = 8192 * speed  / 100.0f;
+
+    ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_2, (int)pwm_value);
+    ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_2);
+
+
 }
 
-// 反转：IA低，IB高
-void Motor_Back(void)
+void Motor_IB_PWM(uint16_t speed)
 {
-    gpio_set_level(MOTOR_IA, 0);
-    gpio_set_level(MOTOR_IB, 1);
+     float pwm_value = 0;
+    pwm_value = 8192 * speed  / 100.0f;
+
+    ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_3, (int)pwm_value);
+    ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_3);
+
+
 }
 
-// 停转：IA高，IB高
-void Motor_Stop(void)
+void Motor_Control(int speed)
 {
-    gpio_set_level(MOTOR_IA, 1);
-    gpio_set_level(MOTOR_IB, 1);
+    if(speed >0)
+    {
+        Motor_IA_PWM(speed);
+        Motor_IB_PWM(0);
+    }
+
+    else if(speed  < 0)
+    {
+        Motor_IA_PWM(0);
+        Motor_IB_PWM(-speed);
+    }
+
+
+     else if(speed  == 0)
+    {
+        Motor_IA_PWM(0);
+        Motor_IB_PWM(0);
+    }
+
+
 }
+
