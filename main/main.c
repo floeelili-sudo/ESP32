@@ -4,98 +4,85 @@
 
 #include "led.h"
 #include "key.h"
-#include "motor.h"  
+#include "motor.h"
+#include "rgb.h"
+
+ws2812_strip_handle_t ws2812_handle = NULL;
 
 void Run_task(void *ptr);
+void Rgb_task(void *ptr);
 
 
 void app_main(void)
 {
     Led_Init();
     Key_Init();
-    Motor_Init();  
+    Motor_Init();
 
+    // 初始化RGB灯
+    ws2812_init(WS2812_GPIO_NUM,
+                WS2812_LED_NUM,
+                &ws2812_handle);
 
-     xTaskCreatePinnedToCore(
-        Run_task, "run", 2048, NULL, 5, NULL, 0
+    // // 电机任务
+    // xTaskCreatePinnedToCore(
+    //     Run_task, "run", 2048, NULL, 5, NULL, 0
+    // );
+
+    // RGB任务
+    xTaskCreatePinnedToCore(
+        Rgb_task, "rgb", 2048, NULL, 5, NULL, 0
     );
 }
 
 
+// // 原来的电机调速任务
 // void Run_task(void *ptr)
 // {
-//     printf("Start Run Task\r\n");
-
 //     while (1)
 //     {
-//         printf("Task Run\r\n");
-//         vTaskDelay((500));
-//     }
+//         Motor_Control(10);
+//         vTaskDelay(pdMS_TO_TICKS(1000));
 
+//         Motor_Control(30);
+//         vTaskDelay(pdMS_TO_TICKS(1000));
+
+//         Motor_Control(50);
+//         vTaskDelay(pdMS_TO_TICKS(1000));
+
+//         Motor_Control(70);
+//         vTaskDelay(pdMS_TO_TICKS(1000));
+
+//         Motor_Control(100);
+//         vTaskDelay(pdMS_TO_TICKS(1000));
+//     }
 // }
 
 
-void Run_task(void *ptr)
+// RGB循环变色任务
+void Rgb_task(void *ptr)
 {
     while (1)
     {
-        Motor_Control(10);
-        vTaskDelay(pdMS_TO_TICKS(1000));
+        // 依次变成红色
+        for (int i = 0; i < WS2812_LED_NUM; i++)
+        {
+            ws2812_write(ws2812_handle, i, 255, 0, 0);
+            vTaskDelay(pdMS_TO_TICKS(1000));
+        }
 
-        Motor_Control(30);
-        vTaskDelay(pdMS_TO_TICKS(1000));
+        // 依次变成绿色
+        for (int i = 0; i < WS2812_LED_NUM; i++)
+        {
+            ws2812_write(ws2812_handle, i, 0, 255, 0);
+            vTaskDelay(pdMS_TO_TICKS(1000));
+        }
 
-        Motor_Control(50);
-        vTaskDelay(pdMS_TO_TICKS(1000));
-
-        Motor_Control(70);
-        vTaskDelay(pdMS_TO_TICKS(1000));
-
-        Motor_Control(100);
-        vTaskDelay(pdMS_TO_TICKS(1000));
+        // 依次变成蓝色
+        for (int i = 0; i < WS2812_LED_NUM; i++)
+        {
+            ws2812_write(ws2812_handle, i, 0, 0, 255);
+            vTaskDelay(pdMS_TO_TICKS(1000));
+        }
     }
 }
-
-// void Run_task(void *ptr)
-// {
-//     uint8_t led_state = 0;
-
-//     while(1)
-//     {
-//         if(Key_GetStatus())
-//         {
-//             printf("按下按键,LED状态翻转\r\n");
-
-//             led_state = !led_state; // 状态翻转（0变1，1变0）
-
-//             if(led_state)
-//             {
-//                 gpio_set_level(GPIO_NUM_10, 0); // 打开LED
-//             }
-//             else
-//             {
-//                 gpio_set_level(GPIO_NUM_10, 1); // 关闭LED
-//             }
-//         }
-//         vTaskDelay(10 / portTICK_PERIOD_MS);
-//     }
-// }
-
-// // 电机循环
-// void Motor_task(void *ptr)
-// {
-//     while(1)
-//     {
-//         printf("电机正转\r\n");
-//         Motor_Run();
-//         vTaskDelay(pdMS_TO_TICKS(500));
-
-//         printf("电机反转\r\n");
-//         Motor_Back();
-//         vTaskDelay(pdMS_TO_TICKS(500));
-
-//         printf("电机停转\r\n");
-//         Motor_Stop();
-//         vTaskDelay(pdMS_TO_TICKS(500));
-//     }
-// }
